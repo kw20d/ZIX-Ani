@@ -2,7 +2,7 @@ var compWidth = 1920;
 var compHeight = 1080;
 var comp;
 var string;
-var ease = new KeyframeEase(0, 100);
+var ease = new KeyframeEase(0, 70);
 var textLayer;
 var textProp;
 var textDoc;
@@ -12,6 +12,7 @@ var position;
 var blur;
 var blurriness;
 var scale;
+var rotation;
 var key1;
 var key2;
 var effects;
@@ -20,6 +21,8 @@ var slider2;
 var slider3;
 var styleOf = 'Scale';
 var typeOf = 'Ease';
+var layerCollection;
+var allNull;
 
 var bounce = 'n = 0;\n'+
                                         'if (numKeys > 0){\n'+
@@ -100,6 +103,8 @@ function bouncing(object, value1, value2, time1, time2){
 
 function textInitiate(word){
     textLayer = comp.layers.addText(word);
+    textLayer.setParentWithJump(allNull);
+    textLayer.motionBlur = true;
     textProp = textLayer.property("Source Text");
     textDoc = textProp.value;
     textDoc.fontSize = 120;
@@ -212,12 +217,104 @@ function scaleIn(words, type){
     }
 }
 
-function animating(style, type, words){
-    if(type === 'Bounce')
+function rotateIn(words, type){
+    var txt = words;
+    var widths = [];
+    var totalWidth = 0;
+    var gap = 80;
+
+    for(var i = 0; i < txt.length; i++)
+    {
+        textInitiate(txt[i]);
+        widths[i] = rect.width;
+        totalWidth += rect.width;
+        textLayer.remove();
+    }
+
+    totalWidth += gap * (txt.length - 1);
+
+    var fitScale = Math.min(1, (compWidth - 160) / totalWidth);
+    var currentX = (compWidth - totalWidth * fitScale) / 2;
+
+    for(var i = 0; i < txt.length; i++)
+    {
+        key1 = 0 + .2 * i;
+        key2 = .3 + .2 * i;
+        textInitiate(txt[i]);
+        var wordWidth = widths[i] * fitScale;
+        var finalX = currentX + wordWidth / 2;
+
+        currentX += wordWidth + gap * fitScale;
+
+        textLayer.property("Transform").property("Scale")
+            .setValue([fitScale * 100, fitScale * 100]);
+
+        position = textLayer.property("Transform").property("Position");
+        position.setValue([finalX, compHeight / 2]);
+
+        opacity = textLayer.property("Transform").property("Opacity");
+        rotation = textLayer.property("Transform").property("Rotation");
+        blur = textLayer.property("Effects").addProperty("ADBE Gaussian Blur 2");
+        blurriness = blur.property("Blurriness");
+
+        easing(opacity, 0, 100, key1, key2);
+        easing(blurriness, 30, 0, key1 + .1, key2 + .1);
+
+        if(type === "Bounce")
+        {
+            bouncing(rotation, -30, 0, key1, key2);
+        }
+        else
+        {
+            easing(rotation, -30, 0, key1, key2);
+        }
+    }
+}
+
+
+function animating(style, type, words) {
+    if(type === "Bounce")
         createController();
 
-    if(style === 'Pop In') popIn(words, type);
-    else scaleIn(words, type);
+    if(style === "Pop In")
+        popIn(words, type);
+    else if(style === "Scale")
+        scaleIn(words, type);
+    else if(style === "Rotate In")
+        rotateIn(words, type);
+}
+
+function exitFade(comp, duration) {
+
+    var fadeStart = comp.duration - duration;
+    var fadeEnd = comp.duration;
+
+    for (var i = 1; i <= comp.numLayers; i++) {
+
+        var layer = comp.layer(i);
+
+        // Only apply the fade to text layers
+        if (layer.matchName === "ADBE Text Layer") {
+
+            var opacity = layer.property("Transform").property("Opacity");
+
+            opacity.setValueAtTime(fadeStart, 100);
+            opacity.setValueAtTime(fadeEnd, 0);
+
+            // Smooth, linear fade-out
+            opacity.setInterpolationTypeAtKey(
+                opacity.nearestKeyIndex(fadeStart),
+                KeyframeInterpolationType.LINEAR,
+                KeyframeInterpolationType.LINEAR
+            );
+
+            opacity.setInterpolationTypeAtKey(
+                opacity.nearestKeyIndex(fadeEnd),
+                KeyframeInterpolationType.LINEAR,
+                KeyframeInterpolationType.LINEAR
+            );
+        }
+    }
 }
 
 var win = new Window("palette", "ZIX-Ani", undefined);
@@ -229,6 +326,7 @@ var styleGroup = choicesGroup.add("panel", undefined, "Animation Style");
 styleGroup.orientation = "row";
 var choice1 = styleGroup.add("radiobutton", undefined, "Pop In");
 var choice2 = styleGroup.add("radiobutton", undefined, "Scale");
+var choiceR = styleGroup.add("radiobutton", undefined, "Rotate In");
 choice2.value = true;
 var typeGroup = choicesGroup.add("panel",undefined ,"Animation Type");
 typeGroup.orientation = "row";
@@ -246,8 +344,10 @@ button1.onClick = function() {
 
     if(choice1.value)
         styleOf = "Pop In";
-    else
+    else if(choice2.value)
         styleOf = "Scale";
+    else if (choiceR.value)
+        styleOf = "Rotate In";
 
     if(choice3.value)
         typeOf = "Bounce";
@@ -267,11 +367,10 @@ button1.onClick = function() {
         var words = cleanString.split(/\s+/);
         var wordCount = words.length;
 
-        // Fixed Full HD composition for use in standard editing projects.
         compWidth = 1920;
         compHeight = 1080;
 
-        var compLength = .4 * wordCount + .2;
+        var compLength = .4 * wordCount + .5;
 
         if(typeOf === "Bounce")
             compLength += Math.log(100) / 5;
@@ -286,8 +385,27 @@ button1.onClick = function() {
         );
 
         createdComp = comp;
+        createdComp.motionBlur = true;
+
+        layerCollection = createdComp.layers;
+
+        allNull = layerCollection.addNull();
+        allNull.name = "Global";
+
+        allNull.property("Transform")
+                .property("Anchor Point")
+                .setValue([0, 0]);
+
+        allNull.property("Transform")
+                .property("Position")
+                .setValue([0, 0]);
+
+        allNull.property("Transform")
+            .property("Position")
+            .expression = "wiggle(1, 5)";
 
         animating(styleOf, typeOf, words);
+        exitFade(createdComp, 0.3);
 
     } catch (error) {
 
