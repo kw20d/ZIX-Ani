@@ -3,6 +3,7 @@
 Type a sentence, pick a style, click **Animate**. The script builds a finished 1920×1080 kinetic typography composition with staggered words, easing or bounce, motion blur and an exit fade.
 
 ![Demo](demo.gif)
+![Test](test.gif)
 
 Built in ExtendScript (After Effects scripting) as a small tool for motion designers who want a quick, good-looking text animation without keyframing every word by hand.
 
