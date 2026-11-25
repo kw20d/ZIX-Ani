@@ -66,8 +66,8 @@ If something goes wrong, the script removes the half-built comp and shows the er
 
 ## Tested on
 
-- After Effects: _fill in your version here_
-- OS: _fill in_
+- After Effects: 2026
+- OS: macOS Tahoe
 
 ## How it works
 
@@ -79,7 +79,7 @@ If something goes wrong, the script removes the half-built comp and shows the er
 
 ## Credits
 
-- The bounce expression is adapted from **EZ Inertia**. All credit for the original expression goes to its author. _Add a link to the source here._
+- The bounce expression is adapted from [EZ Inertia](https://www.toolfarm.com/news/freebieae_free_script_creates_easy_inertia_in_after_effects_tutorial/). All credit for the original expression goes to its author.
 - Everything else was written by [Wala Eddine Kara](https://github.com/kw20d).
 
 ## Known limits and next steps
