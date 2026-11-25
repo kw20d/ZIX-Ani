@@ -87,7 +87,3 @@ If something goes wrong, the script removes the half-built comp and shows the er
 - Uses the default font, with no font or color options in the panel yet.
 - The layout code is repeated across the three styles. Moving it into one shared function is planned.
 - More styles (letter-spacing open, per-character animation) are on the idea list.
-
-## License
-
-MIT. See `LICENSE`.
